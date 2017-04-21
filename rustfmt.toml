@@ -1,0 +1,8 @@
+max_width = 200
+ideal_width = 180
+fn_call_width = 120
+struct_lit_width = 30
+fn_brace_style = "AlwaysNextLine"
+item_brace_style = "AlwaysNextLine"
+control_brace_style = "AlwaysNextLine"
+chain_one_line_max = 60

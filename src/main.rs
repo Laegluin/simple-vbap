@@ -1,5 +1,6 @@
 extern crate hound;
 
-fn main() {
+fn main()
+{
     println!("Hello, world!");
 }
