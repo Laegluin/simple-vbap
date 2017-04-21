@@ -1,0 +1,6 @@
+[package]
+name = "simple_vbap"
+version = "0.1.0"
+authors = ["Robin Mirow <robinmirow@live.com>"]
+
+[dependencies]
