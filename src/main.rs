@@ -24,6 +24,7 @@ fn mono_to_scaled_stereo(source: &str, destination: &str, left_gain: f64, right_
     for result in reader.samples::<i16>()
     {
         let sample = result.unwrap();
+
         let left = sample as f64 * left_gain;
         let right = sample as f64 * right_gain;
 
