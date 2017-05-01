@@ -6,3 +6,4 @@ fn_brace_style = "AlwaysNextLine"
 item_brace_style = "AlwaysNextLine"
 control_brace_style = "AlwaysNextLine"
 chain_one_line_max = 60
+write_mode = "Overwrite"
