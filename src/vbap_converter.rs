@@ -1,4 +1,5 @@
 use std::f64::consts::PI;
+use std::result::Result;
 use hound;
 
 
@@ -19,19 +20,19 @@ struct Gain
 
 impl VbapConverter
 {
-    pub fn new(source: &str) -> Self
+    pub fn new(source: &str) -> Result<VbapConverter, &str>
     {
         let reader = hound::WavReader::open(source).unwrap();
 
         if reader.spec().channels > 2 || reader.spec().channels < 1
         {
-            panic!("Only mono or stereo files are supported.");
+            return Result::Err("Only mono or stereo files are supported.");
         }
 
-        VbapConverter {
-            source: source.to_owned(),
-            specs: reader.spec(),
-        }
+        Result::Ok(VbapConverter {
+                       source: source.to_owned(),
+                       specs: reader.spec(),
+                   })
     }
 
     pub fn pan(&self, destination: &str, base_angle: f64, pan_angle: f64)
