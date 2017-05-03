@@ -11,6 +11,13 @@ pub struct VbapConverter
 }
 
 #[derive(Debug)]
+pub struct PanningDirection
+{
+    pub base_angle: f64,
+    pub pan_angle: f64,
+}
+
+#[derive(Debug)]
 struct Gain
 {
     left: f64,
@@ -35,7 +42,19 @@ impl VbapConverter
                    })
     }
 
-    pub fn pan(&self, destination: &str, base_angle: f64, pan_angle: f64)
+    pub fn pan(&self, destination: &str, direction: PanningDirection)
+    {
+        let gain = VbapConverter::calculate_gain(direction.base_angle, direction.pan_angle);
+
+        match self.specs.channels
+        {
+            1 => self.apply_gain_for_mono(gain, destination),
+            2 => self.apply_gain_for_stereo(gain, destination),
+            _ => (),
+        }
+    }
+
+    fn apply_gain_for_mono(&self, gain: Gain, destination: &str)
     {
         let specs = hound::WavSpec {
             channels: 2,
@@ -44,9 +63,7 @@ impl VbapConverter
             sample_format: hound::SampleFormat::Int,
         };
 
-        let gain = VbapConverter::calculate_gain(base_angle, pan_angle);
-
-        let mut reader = hound::WavReader::open(self.source.clone()).unwrap();
+        let mut reader = hound::WavReader::open(&self.source).unwrap();
         let mut writer = hound::WavWriter::create(destination, specs).unwrap();
 
         for result in reader.samples::<i16>()
@@ -58,6 +75,41 @@ impl VbapConverter
 
             writer.write_sample(left as i16).unwrap();
             writer.write_sample(right as i16).unwrap();
+        }
+
+        writer.finalize().unwrap();
+    }
+
+    fn apply_gain_for_stereo(&self, gain: Gain, destination: &str)
+    {
+        let specs = hound::WavSpec {
+            channels: 2,
+            sample_rate: 44100,
+            bits_per_sample: 16,
+            sample_format: hound::SampleFormat::Int,
+        };
+
+        let mut reader = hound::WavReader::open(&self.source).unwrap();
+        let mut writer = hound::WavWriter::create(destination, specs).unwrap();
+
+        for (index, result) in reader.samples::<i16>().enumerate()
+        {
+            let sample = result.unwrap();
+
+            let channel_gain: f64;
+
+            if index % 2 == 0
+            {
+                channel_gain = gain.left;
+            }
+            else
+            {
+                channel_gain = gain.right;
+            }
+
+            let new_sample = sample as f64 * channel_gain;
+
+            writer.write_sample(new_sample as i16).unwrap();
         }
 
         writer.finalize().unwrap();
