@@ -3,6 +3,8 @@ use std::result::Result;
 use hound;
 
 
+type PanningCallback = fn(i32) -> PanningDirection;
+
 #[derive(Debug)]
 pub struct VbapConverter
 {
