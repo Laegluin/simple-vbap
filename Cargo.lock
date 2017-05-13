@@ -3,6 +3,7 @@ name = "simple_vbap"
 version = "0.1.0"
 dependencies = [
  "hound 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -10,5 +11,11 @@ name = "hound"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
+[[package]]
+name = "libc"
+version = "0.2.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
 [metadata]
 "checksum hound 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d751b836ac593fc578456297bea26218d15ef07c3086c70fca97ba5402e562ec"
+"checksum libc 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)" = "babb8281da88cba992fa1f4ddec7d63ed96280a1a53ec9b919fd37b53d71e502"

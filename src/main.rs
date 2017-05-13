@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 
 extern crate hound;
+extern crate libc;
 mod vbap_converter;
+mod player;
 
 use vbap_converter::*;
 use std::path::Path;
