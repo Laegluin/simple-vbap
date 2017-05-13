@@ -5,7 +5,7 @@ mod vbap_converter;
 
 use vbap_converter::*;
 use std::path::Path;
-use std::io::stdin;
+use std::io::{stdin, BufRead};
 
 
 fn main()
@@ -31,9 +31,10 @@ fn main()
         println!("\"{0}\" already exists. Override? (y/n)", to);
 
         let mut buffer = String::new();
-        stdin().read_line(&mut buffer).unwrap();
+        let stdin = stdin();
+        stdin.lock().read_line(&mut buffer).unwrap();
 
-        match buffer.to_lowercase().as_str() 
+        match buffer.to_lowercase().trim() 
         {
             "y" => std::fs::remove_file(&to).unwrap(),
             _ => return,
