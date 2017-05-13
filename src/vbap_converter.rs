@@ -1,9 +1,15 @@
 use std::f64::consts::PI;
 use std::result::Result;
+use std::io::{Write, Seek};
 use hound;
 
 
-type PanningCallback = fn(i32) -> PanningDirection;
+#[derive(Debug)]
+enum ChannelGain
+{
+    Left(f64),
+    Right(f64),
+}
 
 #[derive(Debug)]
 pub struct VbapConverter
@@ -13,8 +19,9 @@ pub struct VbapConverter
 }
 
 #[derive(Debug)]
-pub struct PanningDirection
+pub struct PanningDirection<T>
 {
+    pub user_data: Option<T>,
     pub base_angle: f64,
     pub pan_angle: f64,
 }
@@ -44,20 +51,29 @@ impl VbapConverter
                    })
     }
 
-    pub fn pan(&self, destination: &str, direction: PanningDirection)
-    {
-        let gain = VbapConverter::calculate_gain(direction.base_angle, direction.pan_angle);
-
-        match self.specs.channels
+    pub fn pan(&self, destination: &str, base_angle: f64, pan_angle: f64)
+    {      
+        #![allow(unused_variables)]  
+        let const_pan = |index: u32, user_data: Option<()>| PanningDirection
         {
-            1 => self.apply_gain_for_mono(gain, destination),
-            2 => self.apply_gain_for_stereo(gain, destination),
-            _ => (),
-        }
+            user_data: Option::None,
+            base_angle: base_angle,
+            pan_angle: pan_angle,
+        };
+
+        self.write_samples(destination, const_pan);
     }
 
-    fn apply_gain_for_mono(&self, gain: Gain, destination: &str)
+    pub fn pan_interactive<T, F>(&self, destination: &str, callback: F)
+        where F: Fn(u32, Option<T>) -> PanningDirection<T>
     {
+        self.write_samples(destination, callback);
+    }
+
+    fn write_samples<T, F>(&self, destination: &str, callback: F) 
+        where F: Fn(u32, Option<T>) -> PanningDirection<T>
+    {
+        // write output as stereo pcm
         let specs = hound::WavSpec {
             channels: 2,
             sample_rate: 44100,
@@ -68,53 +84,69 @@ impl VbapConverter
         let mut reader = hound::WavReader::open(&self.source).unwrap();
         let mut writer = hound::WavWriter::create(destination, specs).unwrap();
 
-        for result in reader.samples::<i16>()
+        // first call has no user data to pass
+        let mut user_data: Option<T> = Option::None;
+
+        // iterate over samples
+        for (index, result) in reader.samples::<i16>().enumerate()
         {
             let sample = result.unwrap();
+            let sample_pair_index = index / self.specs.channels as usize;
+            let mut gain: Gain = Gain {left: 0.0, right: 0.0};
 
+            if index % self.specs.channels as usize == 0
+            {
+                let direction = callback(sample_pair_index as u32, user_data);
+                gain = VbapConverter::calculate_gain(direction.base_angle, direction.pan_angle);
+                
+                user_data = direction.user_data;
+            }
+
+            // write samples depending on input format
+            if self.specs.channels == 1
+            {
+                VbapConverter::write_samples_mono(sample, gain, &mut writer);
+            }
+            else if self.specs.channels == 2
+            {
+                // calculate channel of current sample
+                if index % 2 == 0
+                {
+                    VbapConverter::write_samples_stereo(sample, ChannelGain::Left(gain.left), &mut writer);
+                }
+                else
+                {
+                    VbapConverter::write_samples_stereo(sample, ChannelGain::Right(gain.right), &mut writer);
+                }
+            }
+        }
+
+        // finalize the written data
+        writer.finalize().unwrap();
+    }
+
+    fn write_samples_mono<W>(sample: i16, gain: Gain, writer: &mut hound::WavWriter<W>)
+        where W: Write + Seek
+    {
             let left = sample as f64 * gain.left;
             let right = sample as f64 * gain.right;
 
             writer.write_sample(left as i16).unwrap();
             writer.write_sample(right as i16).unwrap();
-        }
-
-        writer.finalize().unwrap();
     }
 
-    fn apply_gain_for_stereo(&self, gain: Gain, destination: &str)
+    fn write_samples_stereo<W>(sample: i16, channel_gain: ChannelGain, writer: &mut hound::WavWriter<W>)
+        where W: Write + Seek
     {
-        let specs = hound::WavSpec {
-            channels: 2,
-            sample_rate: 44100,
-            bits_per_sample: 16,
-            sample_format: hound::SampleFormat::Int,
-        };
+        let new_sample: i16;
 
-        let mut reader = hound::WavReader::open(&self.source).unwrap();
-        let mut writer = hound::WavWriter::create(destination, specs).unwrap();
-
-        for (index, result) in reader.samples::<i16>().enumerate()
+        match channel_gain 
         {
-            let sample = result.unwrap();
-
-            let channel_gain: f64;
-
-            if index % 2 == 0
-            {
-                channel_gain = gain.left;
-            }
-            else
-            {
-                channel_gain = gain.right;
-            }
-
-            let new_sample = sample as f64 * channel_gain;
-
-            writer.write_sample(new_sample as i16).unwrap();
+            ChannelGain::Left(gain) => new_sample = (sample as f64 * gain) as i16,
+            ChannelGain::Right(gain) => new_sample = (sample as f64 * gain) as i16,
         }
 
-        writer.finalize().unwrap();
+        writer.write_sample(new_sample).unwrap();
     }
 
     fn calculate_gain(base_angle: f64, pan_angle: f64) -> Gain
