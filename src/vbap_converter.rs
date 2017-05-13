@@ -26,7 +26,7 @@ pub struct PanningDirection<T>
     pub pan_angle: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Gain
 {
     left: f64,
@@ -84,21 +84,21 @@ impl VbapConverter
         let mut reader = hound::WavReader::open(&self.source).unwrap();
         let mut writer = hound::WavWriter::create(destination, specs).unwrap();
 
-        // first call has no user data to pass
+        // init variable that live longer than one iteration
         let mut user_data: Option<T> = Option::None;
+        let mut gain = Gain {left: 0.0, right: 0.0};
 
         // iterate over samples
         for (index, result) in reader.samples::<i16>().enumerate()
         {
             let sample = result.unwrap();
             let sample_pair_index = index / self.specs.channels as usize;
-            let mut gain: Gain = Gain {left: 0.0, right: 0.0};
-
+            
             if index % self.specs.channels as usize == 0
             {
                 let direction = callback(sample_pair_index as u32, user_data);
                 gain = VbapConverter::calculate_gain(direction.base_angle, direction.pan_angle);
-                
+
                 user_data = direction.user_data;
             }
 
@@ -115,7 +115,7 @@ impl VbapConverter
                     VbapConverter::write_samples_stereo(sample, ChannelGain::Left(gain.left), &mut writer);
                 }
                 else
-                {
+                {               
                     VbapConverter::write_samples_stereo(sample, ChannelGain::Right(gain.right), &mut writer);
                 }
             }
@@ -145,7 +145,7 @@ impl VbapConverter
             ChannelGain::Left(gain) => new_sample = (sample as f64 * gain) as i16,
             ChannelGain::Right(gain) => new_sample = (sample as f64 * gain) as i16,
         }
-
+        
         writer.write_sample(new_sample).unwrap();
     }
 
@@ -158,7 +158,7 @@ impl VbapConverter
 
         if pan_angle >= base_angle || pan_angle <= -base_angle
         {
-            panic!("The pan angle must be between base_angle and -base_angle.");
+            panic!("The pan angle must be between base_angle and -base_angle, was {0}", pan_angle);
         }
 
         let base_angle_rad = base_angle * PI / 180.0;
