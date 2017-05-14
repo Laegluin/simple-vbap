@@ -13,9 +13,6 @@ use std::io::{stdin, BufRead};
 
 fn main()
 {
-    let vlc = LibVlc::new();
-    println!("{0}", vlc.instance_ptr);
-
     let args: Vec<String> = std::env::args().collect();
     if args.len() <= 2
     {
