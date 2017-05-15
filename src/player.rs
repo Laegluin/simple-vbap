@@ -142,6 +142,14 @@ impl MediaPlayer
             libvlc_media_player_play(self.player_ptr);
         }
     }
+
+    pub fn pause(&self)
+    {
+        unsafe
+        {
+            libvlc_media_player_set_pause(self.player_ptr, 1);
+        }
+    }
 }
 
 impl Drop for MediaPlayer 
@@ -174,4 +182,6 @@ extern "C"
     fn libvlc_media_new_path(libvlc_ptr: intptr_t, path: *const c_char) -> intptr_t;
 
     fn libvlc_media_release(media_ptr: intptr_t);
+
+    fn libvlc_media_player_set_pause(player_ptr: intptr_t, pause_flag: int32_t);
 }
