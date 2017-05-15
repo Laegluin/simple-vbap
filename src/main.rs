@@ -144,7 +144,7 @@ fn print_usage_player()
 {
     let usage1 = "<Player> [!p | !play]     Starts playback. No effect if already playing.\n";
     let usage2 = "<Player> [!pause]         Pauses playback. No effect if already paused.\n";
-    let usage3 = "<Player> [!q | !quit]     Stops playback and exits the program.\n";
+    let usage3 = "<Player> [!q | !quit]     Stops playback and exits the program.";
 
     println!("{0}{1}{2}", usage1, usage2, usage3);
 }
