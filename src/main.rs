@@ -26,13 +26,13 @@ fn main()
     let mut custom_panning = false;
     let mut pan_angle = 0.0;
 
-    for (index, arg) in args.into_iter().enumerate()
+    for (index, arg) in args.into_iter().enumerate().filter(|&(i, _)| i > 0).map(|(i, e)| (i - 1, e))
     {
         match (index, arg.to_lowercase().trim())
         {
-            (1, path) => from = path.to_owned(),
-            (2, path) => to = path.to_owned(),
-            (3, angle) => pan_angle = angle.parse::<f64>().unwrap_or_default(),
+            (0, path) => from = path.to_owned(),
+            (1, path) => to = path.to_owned(),
+            (2, angle) => pan_angle = angle.parse::<f64>().unwrap_or_default(),
             (_, "-p") | (_, "--play") => play_after_finish = true,
             (_, "-m") | (_, "--move") => custom_panning = true,
             (_, "-h") | (_, "--help") | _ => print_usage(),
