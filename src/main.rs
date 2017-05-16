@@ -2,6 +2,7 @@
 
 extern crate hound;
 extern crate libc;
+extern crate time;
 mod vbap_converter;
 mod player;
 
@@ -72,8 +73,11 @@ fn main()
 
 fn convert(to: &str, from: &str, pan_angle: f64, custom_panning: bool, play_after_finish: bool)
 {
-     let converter = VbapConverter::new(from).unwrap();
+    // measure elapsed time
+    let start_time = time::precise_time_ns();
+    let converter = VbapConverter::new(from).unwrap();
 
+    // use panning function if true, else use user defined value
     if custom_panning
     {
         converter.pan_interactive(to, pan_moving);
@@ -83,6 +87,11 @@ fn convert(to: &str, from: &str, pan_angle: f64, custom_panning: bool, play_afte
         converter.pan(&to, 30.0, pan_angle);   
     }
 
+    let end_time = time::precise_time_ns();
+    let elapsed = end_time - start_time;
+    println!("Finished in {0} seconds.", elapsed as f64 * 1e-9);
+
+    // play converted audio if flag was set
     if play_after_finish
     {
         play(to);
