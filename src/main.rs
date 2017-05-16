@@ -13,21 +13,19 @@ use std::io::{stdin, stdout, Write, BufRead};
 
 fn main()
 {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() <= 2
-    {
-        print_usage();
-        return;
-    }
-
+    // init with default values
     let mut from = String::new();
     let mut to = String::new();
     let mut play_after_finish = false;
     let mut custom_panning = false;
     let mut pan_angle = 0.0;
+    let mut arg_count = 0;
 
-    for (index, arg) in args.into_iter().enumerate().filter(|&(i, _)| i > 0).map(|(i, e)| (i - 1, e))
+    // parse args
+    for (index, arg) in std::env::args().enumerate().filter(|&(i, _)| i > 0).map(|(i, e)| (i - 1, e))
     {
+        arg_count = index;
+
         match (index, arg.to_lowercase().trim())
         {
             (0, path) => from = path.to_owned(),
@@ -39,6 +37,14 @@ fn main()
         }
     }
 
+    // need at least three args
+    if arg_count < 3 
+    {
+        print_usage();
+        return;
+    }
+
+    // check for common io errors
     if !Path::new(&from).exists()
     {
         println!("\"{0}\" is not a valid path", from);
@@ -60,11 +66,17 @@ fn main()
         }
     }
 
-    let converter = VbapConverter::new(&from).unwrap();
+    // actual conversion work
+    convert(&to, &from, pan_angle, custom_panning, play_after_finish);   
+}
+
+fn convert(to: &str, from: &str, pan_angle: f64, custom_panning: bool, play_after_finish: bool)
+{
+     let converter = VbapConverter::new(from).unwrap();
 
     if custom_panning
     {
-        converter.pan_interactive(&to, pan_moving);
+        converter.pan_interactive(to, pan_moving);
     }
     else 
     {
@@ -73,8 +85,8 @@ fn main()
 
     if play_after_finish
     {
-        play(&to);
-    }      
+        play(to);
+    }    
 }
 
 fn play(path: &str)
