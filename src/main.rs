@@ -25,7 +25,7 @@ fn main()
     // parse args
     for (index, arg) in std::env::args().enumerate().filter(|&(i, _)| i > 0).map(|(i, e)| (i - 1, e))
     {
-        arg_count = index;
+        arg_count += 1;
 
         match (index, arg.to_lowercase().trim())
         {
