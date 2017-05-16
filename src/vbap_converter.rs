@@ -97,7 +97,7 @@ impl VbapConverter
             if index % self.specs.channels as usize == 0
             {
                 let direction = callback(sample_pair_index as u32, user_data);
-                gain = VbapConverter::calculate_gain(direction.base_angle, direction.pan_angle);
+                gain = VbapConverter::calculate_gain(direction.base_angle, direction.pan_angle).unwrap();
 
                 user_data = direction.user_data;
             }
@@ -149,16 +149,16 @@ impl VbapConverter
         writer.write_sample(new_sample).unwrap();
     }
 
-    fn calculate_gain(base_angle: f64, pan_angle: f64) -> Gain
+    fn calculate_gain(base_angle: f64, pan_angle: f64) -> Result<Gain, String>
     {
         if pan_angle == 0.0
         {
-            return Gain { left: 1.0, right: 1.0 };
+            return Result::Ok(Gain { left: 1.0, right: 1.0 });
         }
 
         if pan_angle >= base_angle || pan_angle <= -base_angle
         {
-            panic!("The pan angle must be between base_angle and -base_angle, was {0}", pan_angle);
+            return Result::Err(format!("The pan angle must be between base_angle and -base_angle, was {0}", pan_angle));
         }
 
         let base_angle_rad = base_angle * PI / 180.0;
@@ -171,6 +171,6 @@ impl VbapConverter
         let mut left = right * (base_angle_rad.tan()) + right * (pan_angle_rad.tan());
         left /= base_angle_rad.tan() - pan_angle_rad.tan();
 
-        Gain { left: left, right: right }
+        Result::Ok(Gain { left: left, right: right })
     }
 }
