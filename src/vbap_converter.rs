@@ -53,7 +53,6 @@ impl VbapConverter
 
     pub fn pan(&self, destination: &str, base_angle: f64, pan_angle: f64)
     {      
-        #![allow(unused_variables)]  
         let const_pan = |index: u32, user_data: Option<()>| PanningDirection
         {
             user_data: Option::None,
