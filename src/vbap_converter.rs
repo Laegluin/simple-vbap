@@ -53,7 +53,7 @@ impl VbapConverter
 
     pub fn pan(&self, destination: &str, base_angle: f64, pan_angle: f64)
     {      
-        let const_pan = |index: u32, user_data: Option<()>| PanningDirection
+        let const_pan = |_: u32, _ : Option<()>| PanningDirection
         {
             user_data: Option::None,
             base_angle: base_angle,
@@ -150,11 +150,6 @@ impl VbapConverter
 
     fn calculate_gain(base_angle: f64, pan_angle: f64) -> Result<Gain, String>
     {
-        if pan_angle == 0.0
-        {
-            return Result::Ok(Gain { left: 1.0, right: 1.0 });
-        }
-
         if pan_angle >= base_angle || pan_angle <= -base_angle
         {
             return Result::Err(format!("The pan angle must be between base_angle and -base_angle, was {0}", pan_angle));
