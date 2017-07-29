@@ -1,5 +1,3 @@
-use std::path::Path;
-
 fn main() 
 {
     // give linker correct path
