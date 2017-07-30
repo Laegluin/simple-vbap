@@ -163,11 +163,9 @@ fn pan_moving(sample_index: u32, user_data: Option<()>) -> PanningDirection<()>
 
 fn print_usage_player()
 {
-    let usage1 = "<Player> [!p | !play]     Starts playback. No effect if already playing.\n";
-    let usage2 = "<Player> [!pause]         Pauses playback. No effect if already paused.\n";
-    let usage3 = "<Player> [!q | !quit]     Stops playback and exits the program.";
-
-    println!("{0}{1}{2}", usage1, usage2, usage3);
+    println!("<Player> [!p | !play]     Starts playback. No effect if already playing.\n");
+    println!("<Player> [!pause]         Pauses playback. No effect if already paused.\n");
+    println!("<Player> [!q | !quit]     Stops playback and exits the program.");
 }
 
 fn print_usage()
